@@ -110,6 +110,9 @@ uint32_t globalID = 0;
 String ballVelPckgBase;
 String ballVelPckgValue;
 
+// air valve logging
+uint32_t airvalveTimestamp = 0;
+uint32_t airvalvePckgID = 0;
 
 // m4 action processing 
 bool local_new_M4_action;
@@ -404,6 +407,10 @@ void processSerialInput(){
       case 'A': // turn on main air supply for levitating ball
         Breakout.digitalWrite(PWM3, (airON) ? LOW : HIGH);
         airON = !airON;
+        airvalveTimestamp = micros();
+        String PckgBase = constr_pckg_base_str("A", airvalvePckgID, airvalveTimestamp);
+        serialwrite_package(PckgBase, "1");
+        airvalvePckgID++;
         return;
       
       // M4 actions
@@ -592,13 +599,13 @@ void setup() {
 
   // TTL pin setup for ball and lick
   Breakout.pinMode(PWM9, OUTPUT); // ball sensor ttl
-  Breakout.pinMode(PWM8, OUTPUT); // lick sensor ttl
+  // Breakout.pinMode(PWM8, OUTPUT); // lick sensor ttl
 
   // main airvalve -- working
   Breakout.pinMode(PWM3, OUTPUT);
   
-  Breakout.pinMode(GPIO_6, OUTPUT);
-  Breakout.digitalWrite(GPIO_6, HIGH);
+  // Breakout.pinMode(GPIO_6, OUTPUT);
+  // Breakout.digitalWrite(GPIO_6, HIGH);
   
 
 
@@ -739,7 +746,7 @@ bool PWM_state = false;
 #define HALF_PERIOD_PUNISH 1020
 
 #define SOUND_LENGTH 400 // ms
-#define PAUSE_LENGTH 100 // ms
+// #define PAUSE_LENGTH 100 // ms
 
 // uint32_t sound_end_t;
 // uint32_t reward_start_t;
@@ -879,14 +886,14 @@ void loop(){
       delayMicroseconds(HALF_PERIOD_REWARD);
     }
     
-    delay(PAUSE_LENGTH);
+    // delay(PAUSE_LENGTH);
     
-    for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
-      Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
-      PWM_state = !PWM_state;
-      delayMicroseconds(HALF_PERIOD_REWARD);
-    }
-    Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
+    // for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
+    //   Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
+    //   PWM_state = !PWM_state;
+    //   delayMicroseconds(HALF_PERIOD_REWARD);
+    // }
+    // Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
 
     // sleep for sound_delay
     delay(local_actionDelay);
@@ -921,7 +928,7 @@ void loop(){
     HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
 
     Breakout.digitalWrite(GPIO_5, HIGH); // TTL HIGH failure sound start
-    for (uint16_t i=0; i < (SOUND_LENGTH*2000) / HALF_PERIOD_PUNISH; i++){
+    for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_PUNISH; i++){
       Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
       PWM_state = !PWM_state;
       delayMicroseconds(HALF_PERIOD_PUNISH);
@@ -939,12 +946,11 @@ void loop(){
 
     // airpuff
     Breakout.digitalWrite(PWM4, HIGH);  // Airpuff valve open
-    Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
+    // Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
     delay(local_actionLength);
     Breakout.digitalWrite(PWM4, LOW); // Airpuff valve closed
-    Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
+    // Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
   }
-
 }
 
 // /*
