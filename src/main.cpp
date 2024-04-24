@@ -404,15 +404,15 @@ void processSerialInput(){
 
     switch (local_startNewAction) {
 
-      case 'A': // turn on main air supply for levitating ball
+      case 'A': { // turn on main air supply for levitating ball
         Breakout.digitalWrite(PWM3, (airON) ? LOW : HIGH);
         airON = !airON;
         airvalveTimestamp = micros();
         String PckgBase = constr_pckg_base_str("A", airvalvePckgID, airvalveTimestamp);
         serialwrite_package(PckgBase, "1");
         airvalvePckgID++;
-        return;
-      
+        break;
+      }
       // M4 actions
       case 'S': // trigger sucessful outcome, success-sound + open reward valve
         comma1 = cmd.indexOf(',',1);
@@ -460,26 +460,31 @@ void processM4actions(){
   if (local_startedM4Action!='\0') 
   {
     m4actionTimestamp = micros();
+    String m4actionPckgValueStr;
     switch (local_startedM4Action) {
       case 'S': // success sound
         pckgID = successPckgID;
+        m4actionPckgValueStr = "-400"; //ensure this matches sound length in M4!!
         successPckgID++;
         break;
-      case 'F': // success sound
+      case 'F': // failure sound
         pckgID = failurePckgID;
+        m4actionPckgValueStr = "-400"; //ensure this matches sound length in M4!!
         failurePckgID++;
         break;
-      case 'R': // success sound
+      case 'R': // reward delivered
         pckgID = rewardPckgID;
+        m4actionPckgValueStr = "1"; //ensure this matches sound length in M4!!
         rewardPckgID++;
         break;
-      case 'P': // success sound
+      case 'P': // punishment delivered
         pckgID = punishmentPckgID;
+        m4actionPckgValueStr = "1"; //ensure this matches sound length in M4!!
         punishmentPckgID++;
         break;
     }
     m4actionPckgBase = constr_pckg_base_str(String(local_startedM4Action), pckgID, m4actionTimestamp);
-    serialwrite_package(m4actionPckgBase, "1");
+    serialwrite_package(m4actionPckgBase, m4actionPckgValueStr);
   }
 }
 
@@ -622,6 +627,7 @@ loop M7: screen, ball sensor, lick, serial comm
 void loop2() {
   // test loop to test pins, change from loop2 to loop and change regular loop to loop2
   Breakout.digitalWrite(PWM3, HIGH);
+  Serial.println("Worked");
   delay(2000);
   Breakout.digitalWrite(PWM3, LOW);
   delay(2000);
@@ -742,10 +748,12 @@ uint16_t local_actionDelay;  // relevant for S
 char local_startedM4Action; // can be A S F P
 
 bool PWM_state = false;
-#define HALF_PERIOD_REWARD 360
-#define HALF_PERIOD_PUNISH 1020
+// #define HALF_PERIOD_REWARD 360
+// #define HALF_PERIOD_PUNISH 1020
+#define HALF_PERIOD_REWARD 120
+#define HALF_PERIOD_PUNISH 2040
 
-#define SOUND_LENGTH 400 // ms
+#define SOUND_LENGTH 300 // ms
 // #define PAUSE_LENGTH 100 // ms
 
 // uint32_t sound_end_t;
