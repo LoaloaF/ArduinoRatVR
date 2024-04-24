@@ -402,17 +402,19 @@ void processSerialInput(){
     local_startNewAction = cmd.charAt(0);
     int comma1;
 
-    switch (local_startNewAction) {
+    String PckgBase;
 
-      case 'A': { // turn on main air supply for levitating ball
+    switch (local_startNewAction) {
+      case 'A':  // turn on main air supply for levitating ball
         Breakout.digitalWrite(PWM3, (airON) ? LOW : HIGH);
         airON = !airON;
         airvalveTimestamp = micros();
-        String PckgBase = constr_pckg_base_str("A", airvalvePckgID, airvalveTimestamp);
+        PckgBase = constr_pckg_base_str("A", airvalvePckgID, airvalveTimestamp);
         serialwrite_package(PckgBase, "1");
+        // Serial.println(PckgBase);
         airvalvePckgID++;
-        break;
-      }
+        return;
+
       // M4 actions
       case 'S': // trigger sucessful outcome, success-sound + open reward valve
         comma1 = cmd.indexOf(',',1);
@@ -464,12 +466,12 @@ void processM4actions(){
     switch (local_startedM4Action) {
       case 'S': // success sound
         pckgID = successPckgID;
-        m4actionPckgValueStr = "-400"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = "300"; //ensure this matches sound length in M4!!
         successPckgID++;
         break;
       case 'F': // failure sound
         pckgID = failurePckgID;
-        m4actionPckgValueStr = "-400"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = "300"; //ensure this matches sound length in M4!!
         failurePckgID++;
         break;
       case 'R': // reward delivered
@@ -609,8 +611,8 @@ void setup() {
   // main airvalve -- working
   Breakout.pinMode(PWM3, OUTPUT);
   
-  // Breakout.pinMode(GPIO_6, OUTPUT);
-  // Breakout.digitalWrite(GPIO_6, HIGH);
+  Breakout.pinMode(GPIO_6, OUTPUT);  // needed to enable solonoids
+  Breakout.digitalWrite(GPIO_6, HIGH);
   
 
 
@@ -686,8 +688,8 @@ void loop() {
     digitalWrite(LEDR, LOW);
     end_lick_timestamp = micros();
     lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-    lickPckgValue = String(end_lick_timestamp-start_lick_timestamp);
-    // serialwrite_package(lickPckgBase, lickPckgValue);
+    lickPckgValue = String(-(end_lick_timestamp-start_lick_timestamp));
+    serialwrite_package(lickPckgBase, lickPckgValue);
     lickPckgID++;
   } else{
     digitalWrite(LEDR, HIGH);
@@ -753,7 +755,7 @@ bool PWM_state = false;
 #define HALF_PERIOD_REWARD 120
 #define HALF_PERIOD_PUNISH 2040
 
-#define SOUND_LENGTH 300 // ms
+#define SOUND_LENGTH 1 // ms
 // #define PAUSE_LENGTH 100 // ms
 
 // uint32_t sound_end_t;
