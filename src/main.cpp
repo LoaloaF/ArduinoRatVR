@@ -708,15 +708,15 @@ void loop() {
   */
   // screen didn't update and locked the m7, so disabled atm
 
-  display.clearDisplay();
-  display.setTextSize(1);             // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0,0);             // Start at top-left corner
-  display.println(F("Virtual Reality"));
-  display.println("Row:" + String(rCum));
-  display.println("Yaw:" + String(yCum));
-  display.println("Pitch:" + String(pCum));
-  display.display();
+  // display.clearDisplay();
+  // display.setTextSize(1);             // Normal 1:1 pixel scale
+  // display.setTextColor(SSD1306_WHITE);        // Draw white text
+  // display.setCursor(0,0);             // Start at top-left corner
+  // display.println(F("Virtual Reality"));
+  // display.println("Row:" + String(rCum));
+  // display.println("Yaw:" + String(yCum));
+  // display.println("Pitch:" + String(pCum));
+  // display.display();
   // Serial.println("reached display end");
   //*/
 
@@ -755,7 +755,7 @@ bool PWM_state = false;
 #define HALF_PERIOD_REWARD 120
 #define HALF_PERIOD_PUNISH 2040
 
-#define SOUND_LENGTH 1 // ms
+#define SOUND_LENGTH 250 // ms
 // #define PAUSE_LENGTH 100 // ms
 
 // uint32_t sound_end_t;
