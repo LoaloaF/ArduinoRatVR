@@ -333,7 +333,7 @@ void dispRegisters(breakoutPin pin){
 }
 
 void readXY(int *xy, breakoutPin pin){
-  digitalWrite(ncs,LOW);
+  digitalWrite(pin,LOW);
 
   adns_com_begin(pin);
   SPI.transfer(REG_Motion_Burst & 0x7F);
@@ -347,7 +347,7 @@ void readXY(int *xy, breakoutPin pin){
   yL = SPI.transfer(0);
   yH = SPI.transfer(0);
   
-  digitalWrite(ncs,HIGH); 
+  digitalWrite(pin,HIGH); 
   delayMicroseconds(1); // ncs High for at least 500ns to end burst mode readout
 
   adns_com_end(pin);
@@ -406,11 +406,12 @@ void processSerialInput(){
 
     switch (local_startNewAction) {
       case 'A':  // turn on main air supply for levitating ball
-        Breakout.digitalWrite(PWM3, (airON) ? LOW : HIGH);
-        airON = !airON;
+        local_actionLength = cmd.substring(1).toInt();
+        // airON = !airON;
+        Breakout.digitalWrite(PWM3, (local_actionLength==0) ? LOW : HIGH);
         airvalveTimestamp = micros();
         PckgBase = constr_pckg_base_str("A", airvalvePckgID, airvalveTimestamp);
-        serialwrite_package(PckgBase, "1");
+        serialwrite_package(PckgBase, (local_actionLength==0) ? "0" : "1");
         // Serial.println(PckgBase);
         airvalvePckgID++;
         return;
@@ -662,9 +663,12 @@ void loop() {
   dP = px1*xydat[0] + py1*xydat[1] + px2*xy2dat[0] + py2*xy2dat[1];
   dR = rx1*xydat[0] + ry1*xydat[1] + rx2*xy2dat[0] + ry2*xy2dat[1];
   dY = yx1*xydat[0] + yy1*xydat[1] + yx2*xy2dat[0] + yy2*xy2dat[1];
-  rCum = rCum*0.9 + dR;
-  yCum = yCum*0.9 + dY;
-  pCum = pCum*0.9 + dP;
+  // rCum = rCum*0.9 + dR;
+  // yCum = yCum*0.9 + dY;
+  // pCum = pCum*0.9 + dP;
+  rCum = dR;
+  yCum = dY;
+  pCum = dP;
   // Send off ball velocity via serial port 
   ballVelPckgBase = constr_pckg_base_str("B", ballVelPckgID, ballVelTimestamp);
   ballVelPckgValue = String(rCum) +"_"+ String(yCum) +"_"+ String(pCum);
