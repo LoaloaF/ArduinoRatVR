@@ -615,7 +615,7 @@ void setup() {
   Breakout.pinMode(GPIO_6, OUTPUT);  // needed to enable solonoids
   Breakout.digitalWrite(GPIO_6, HIGH); 
 
-  Breakout.pinMode(ANALOG_A1, INPUT); // or INPUT_PULLUP
+  Breakout.pinMode(ANALOG_A2, INPUT); // or INPUT_PULLUP
 }
 
 
@@ -626,11 +626,11 @@ loop M7: screen, ball sensor, lick, serial comm
 ================================================================================
 */
 
-void loop() {
-  Serial.println(String(Breakout.analogRead(ANALOG_A1)));
+void loop2() {
+  // Serial.println(String(Breakout.analogRead(ANALOG_A2)));
 }
 
-void loop2() {
+void loop() {
   globalID++;
 
   /*
@@ -694,7 +694,7 @@ void loop2() {
   // }
   end_lick_timestamp = micros();
   lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-  lickPckgValue = String(Breakout.analogRead(ANALOG_A1));
+  lickPckgValue = String(Breakout.analogRead(ANALOG_A2));
   serialwrite_package(lickPckgBase, lickPckgValue);
   lickPckgID++;
 
