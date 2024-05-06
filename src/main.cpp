@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 240
+#define LICK_THRESHOLD 20
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -613,10 +613,9 @@ void setup() {
   Breakout.pinMode(PWM3, OUTPUT);
   
   Breakout.pinMode(GPIO_6, OUTPUT);  // needed to enable solonoids
-  Breakout.digitalWrite(GPIO_6, HIGH);
-  
+  Breakout.digitalWrite(GPIO_6, HIGH); 
 
-
+  Breakout.pinMode(ANALOG_A1, INPUT); // or INPUT_PULLUP
 }
 
 
@@ -627,16 +626,11 @@ loop M7: screen, ball sensor, lick, serial comm
 ================================================================================
 */
 
-void loop2() {
-  // test loop to test pins, change from loop2 to loop and change regular loop to loop2
-  Breakout.digitalWrite(PWM3, HIGH);
-  Serial.println("Worked");
-  delay(2000);
-  Breakout.digitalWrite(PWM3, LOW);
-  delay(2000);
+void loop() {
+  Serial.println(String(Breakout.analogRead(ANALOG_A1)));
 }
 
-void loop() {
+void loop2() {
   globalID++;
 
   /*
@@ -680,24 +674,30 @@ void loop() {
   (4) check animals licking, send package when lick over 
   ================================================================================
   */
-  if (Breakout.analogRead(ANALOG_A1)>LICK_THRESHOLD){
-    if (!is_licking){
-      // animal just started licking
-      start_lick_timestamp = micros();
-      is_licking = true;
-      digitalWrite(LEDR, LOW);
-    }
-  } else if (is_licking){
-    is_licking = false;
-    digitalWrite(LEDR, LOW);
-    end_lick_timestamp = micros();
-    lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-    lickPckgValue = String(-(end_lick_timestamp-start_lick_timestamp));
-    serialwrite_package(lickPckgBase, lickPckgValue);
-    lickPckgID++;
-  } else{
-    digitalWrite(LEDR, HIGH);
-  }
+  // if (Breakout.analogRead(ANALOG_A1)>LICK_THRESHOLD){
+  //   if (!is_licking){
+  //     // animal just started licking
+  //     start_lick_timestamp = micros();
+  //     is_licking = true;
+  //     digitalWrite(LEDR, LOW);
+  //   }
+  // } else if (is_licking){
+  //   is_licking = false;
+  //   digitalWrite(LEDR, LOW);
+  //   end_lick_timestamp = micros();
+  //   lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
+  //   lickPckgValue = String(+(end_lick_timestamp-start_lick_timestamp));
+  //   serialwrite_package(lickPckgBase, lickPckgValue);
+  //   lickPckgID++;
+  // } else{
+  //   digitalWrite(LEDR, HIGH);
+  // }
+  end_lick_timestamp = micros();
+  lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
+  lickPckgValue = String(Breakout.analogRead(ANALOG_A1));
+  serialwrite_package(lickPckgBase, lickPckgValue);
+  lickPckgID++;
+
   /*
   ================================================================================
    (5) M4 action check and sending
