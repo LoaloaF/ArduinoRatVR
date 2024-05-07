@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 20
+#define LICK_THRESHOLD 150
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -615,7 +615,7 @@ void setup() {
   Breakout.pinMode(GPIO_6, OUTPUT);  // needed to enable solonoids
   Breakout.digitalWrite(GPIO_6, HIGH); 
 
-  Breakout.pinMode(ANALOG_A2, INPUT); // or INPUT_PULLUP
+  Breakout.pinMode(ANALOG_A6, INPUT); // or INPUT_PULLUP
 }
 
 
@@ -626,9 +626,9 @@ loop M7: screen, ball sensor, lick, serial comm
 ================================================================================
 */
 
-void loop2() {
-  // Serial.println(String(Breakout.analogRead(ANALOG_A2)));
-}
+// void loop() {
+//   Serial.println(String(Breakout.analogRead(ANALOG_A2)));
+// }
 
 void loop() {
   globalID++;
@@ -694,7 +694,7 @@ void loop() {
   // }
   end_lick_timestamp = micros();
   lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-  lickPckgValue = String(Breakout.analogRead(ANALOG_A2));
+  lickPckgValue = String(Breakout.analogRead(ANALOG_A6));
   serialwrite_package(lickPckgBase, lickPckgValue);
   lickPckgID++;
 
