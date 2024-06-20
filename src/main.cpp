@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 150
+#define LICK_THRESHOLD 140
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -380,7 +380,7 @@ String constr_pckg_base_str(String pckgName, int pckgID, int pckgTimestamp) {
 // }
 
 void serialwrite_package(String baseString, String valueString) {
-  Serial.println("<{" + baseString + valueString + "}>");
+  Serial.print("<{" + baseString + valueString + "}>\b\n");
 }
 
 // char validActions[] = {'A', 'S', 'F', 'P'};
@@ -467,22 +467,22 @@ void processM4actions(){
     switch (local_startedM4Action) {
       case 'S': // success sound
         pckgID = successPckgID;
-        m4actionPckgValueStr = "300"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = "250"; //ensure this matches sound length in M4!!
         successPckgID++;
         break;
       case 'F': // failure sound
         pckgID = failurePckgID;
-        m4actionPckgValueStr = "300"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = "250"; //ensure this matches sound length in M4!!
         failurePckgID++;
         break;
       case 'R': // reward delivered
         pckgID = rewardPckgID;
-        m4actionPckgValueStr = "1"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = String(local_actionLength); // how long the valve was open
         rewardPckgID++;
         break;
       case 'P': // punishment delivered
         pckgID = punishmentPckgID;
-        m4actionPckgValueStr = "1"; //ensure this matches sound length in M4!!
+        m4actionPckgValueStr = String(local_actionLength); // how long the air puff was open
         punishmentPckgID++;
         break;
     }
@@ -627,7 +627,7 @@ loop M7: screen, ball sensor, lick, serial comm
 */
 
 // void loop() {
-//   Serial.println(String(Breakout.analogRead(ANALOG_A2)));
+//   Serial.println(String(Breakout.analogRead(ANALOG_A6)));
 // }
 
 void loop() {
@@ -674,29 +674,30 @@ void loop() {
   (4) check animals licking, send package when lick over 
   ================================================================================
   */
-  // if (Breakout.analogRead(ANALOG_A1)>LICK_THRESHOLD){
-  //   if (!is_licking){
-  //     // animal just started licking
-  //     start_lick_timestamp = micros();
-  //     is_licking = true;
-  //     digitalWrite(LEDR, LOW);
-  //   }
-  // } else if (is_licking){
-  //   is_licking = false;
-  //   digitalWrite(LEDR, LOW);
-  //   end_lick_timestamp = micros();
-  //   lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-  //   lickPckgValue = String(+(end_lick_timestamp-start_lick_timestamp));
-  //   serialwrite_package(lickPckgBase, lickPckgValue);
-  //   lickPckgID++;
-  // } else{
-  //   digitalWrite(LEDR, HIGH);
-  // }
-  end_lick_timestamp = micros();
-  lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
-  lickPckgValue = String(Breakout.analogRead(ANALOG_A6));
-  serialwrite_package(lickPckgBase, lickPckgValue);
-  lickPckgID++;
+  if (Breakout.analogRead(ANALOG_A6)>LICK_THRESHOLD){
+    if (!is_licking){
+      // animal just started licking
+      start_lick_timestamp = micros();
+      is_licking = true;
+      digitalWrite(LEDR, LOW);
+    }
+  } else if (is_licking){
+    is_licking = false;
+    digitalWrite(LEDR, LOW);
+    end_lick_timestamp = micros();
+    lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
+    lickPckgValue = "-" + String((end_lick_timestamp-start_lick_timestamp));
+    serialwrite_package(lickPckgBase, lickPckgValue);
+    lickPckgID++;
+  } else{
+    digitalWrite(LEDR, HIGH);
+  }
+  
+  // end_lick_timestamp = micros();
+  // lickPckgBase = constr_pckg_base_str("L", lickPckgID, end_lick_timestamp);
+  // lickPckgValue = String(Breakout.analogRead(ANALOG_A6));
+  // serialwrite_package(lickPckgBase, lickPckgValue);
+  // lickPckgID++;
 
   /*
   ================================================================================
@@ -721,6 +722,7 @@ void loop() {
   // display.println("Yaw:" + String(yCum));
   // display.println("Pitch:" + String(pCum));
   // display.display();
+  
   // Serial.println("reached display end");
   //*/
 
@@ -907,7 +909,7 @@ void loop(){
     //   PWM_state = !PWM_state;
     //   delayMicroseconds(HALF_PERIOD_REWARD);
     // }
-    // Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
+    Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
 
     // sleep for sound_delay
     delay(local_actionDelay);
