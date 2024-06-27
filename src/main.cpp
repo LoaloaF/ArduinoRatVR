@@ -599,7 +599,7 @@ void setup() {
   // GPIO_4 (M4) USER_2 -> valve/reward trigger                                   // ASSIGNED, IMPLEMENTED, TESTED
   // PWM2 (M4) VALVE3 reward TTL                                                  // ASSIGNED, IMPLEMENTED, TESTED
   // PWM7 (M4) -> Sound generator                                                 // ASSIGNED, IMPLEMENTED, TESTED
-  // GPIO_5 (M4) -> Sound TTL                                                     // ASSIGNED, IMPLEMENTED, TESTED
+  // GPIO_1 (M4) -> Sound TTL                                                     // ASSIGNED, IMPLEMENTED, TESTED
 
   // PWM8 (M7) -> USER 3 -> DSub 2 -> Airpuff Sensor TTL                          // ASSIGNED, IMPLEMENTED, TESTED
 
@@ -813,11 +813,11 @@ void setup() {
   Breakout.digitalWrite(REWARD_PIN, LOW);
 
   Breakout.pinMode(PWM7, OUTPUT);
-  Breakout.pinMode(GPIO_5, OUTPUT); //sound TTL
+  Breakout.pinMode(GPIO_1, OUTPUT); //sound TTL
   Breakout.pinMode(PWM2, OUTPUT);  //reward TTL
   
   //Breakout.analogWrite(PWM7, 255);
-  Breakout.digitalWrite(GPIO_5, LOW);
+  // Breakout.digitalWrite(GPIO_1, HIGH);
 
   if (REWARD_PIN == -1) {
     // error indication if reward is not attached to board
@@ -830,12 +830,20 @@ void setup() {
   }
 
   Breakout.pinMode(PWM4, OUTPUT); //air puff
+  Breakout.pinMode(PWM8, OUTPUT); //air TTL
   
   // Breakout.pinMode(PWM2, OUTPUT);
   // Breakout.pinMode(PWM0, OUTPUT);
 }
 
-// void loop2() {
+// void loop3() {
+//   digitalWrite(LEDR, HIGH);
+//   digitalWrite(GPIO_1, HIGH);
+//   delay(1000);
+//   digitalWrite(GPIO_1, LOW);
+//   digitalWrite(LEDR, LOW);
+//   delay(1000);
+// }
 //   // test loop to test pins, change from loop2 to loop and change regular loop to loop2
 //   Breakout.digitalWrite(PWM2, HIGH);
 //   Breakout.digitalWrite(PWM1, HIGH);
@@ -860,7 +868,7 @@ void setup() {
 ================================================================================
 */
 
-void loop2(){
+void loop22(){
   Breakout.digitalWrite(PWM4, (PWM_state) ? HIGH : LOW);
   PWM_state = !PWM_state;
   delay(1020);
@@ -895,12 +903,13 @@ void loop(){
     digitalWrite(LEDG, LOW);
     digitalWrite(LED_BUILTIN, LOW);
     
-    Breakout.digitalWrite(GPIO_5, HIGH);  // TTL HIGH reward sound start
+    digitalWrite(GPIO_1, HIGH);  // TTL HIGH reward sound start
     for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
       Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
       PWM_state = !PWM_state;
       delayMicroseconds(HALF_PERIOD_REWARD);
     }
+    digitalWrite(GPIO_1, LOW); // TTL LOW reward sound stop
     
     // delay(PAUSE_LENGTH);
     
@@ -909,7 +918,6 @@ void loop(){
     //   PWM_state = !PWM_state;
     //   delayMicroseconds(HALF_PERIOD_REWARD);
     // }
-    Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
 
     // sleep for sound_delay
     delay(local_actionDelay);
@@ -943,13 +951,13 @@ void loop(){
     buff->startedM4Action = 'F';
     HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
 
-    Breakout.digitalWrite(GPIO_5, HIGH); // TTL HIGH failure sound start
+    Breakout.digitalWrite(GPIO_1, HIGH); // TTL HIGH failure sound start
     for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_PUNISH; i++){
       Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
       PWM_state = !PWM_state;
       delayMicroseconds(HALF_PERIOD_PUNISH);
     }
-    Breakout.digitalWrite(GPIO_5, LOW); // TTL LOW failure sound stop
+    Breakout.digitalWrite(GPIO_1, LOW); // TTL LOW failure sound stop
 
 
 
@@ -962,10 +970,10 @@ void loop(){
 
     // airpuff
     Breakout.digitalWrite(PWM4, HIGH);  // Airpuff valve open
-    // Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
+    Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
     delay(local_actionLength);
     Breakout.digitalWrite(PWM4, LOW); // Airpuff valve closed
-    // Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
+    Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
   }
 }
 
