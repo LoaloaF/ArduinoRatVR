@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 140
+#define LICK_THRESHOLD 125
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -414,6 +414,10 @@ void processSerialInput(){
         serialwrite_package(PckgBase, (local_actionLength==0) ? "0" : "1");
         // Serial.println(PckgBase);
         airvalvePckgID++;
+        return;
+      case 'W': // pause the core
+        local_actionLength = cmd.substring(1).toInt();
+        delay(local_actionLength);
         return;
 
       // M4 actions
@@ -817,7 +821,7 @@ void setup() {
   Breakout.pinMode(PWM2, OUTPUT);  //reward TTL
   
   //Breakout.analogWrite(PWM7, 255);
-  Breakout.digitalWrite(GPIO_5, LOW);
+  // Breakout.digitalWrite(GPIO_5, LOW);
 
   if (REWARD_PIN == -1) {
     // error indication if reward is not attached to board
