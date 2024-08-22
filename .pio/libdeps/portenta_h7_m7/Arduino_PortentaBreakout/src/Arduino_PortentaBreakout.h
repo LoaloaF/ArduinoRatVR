@@ -252,7 +252,7 @@ public:
     UART UART3;
     MbedSPI SPI_0;
     PDMClass PDM;
-    arduino::EthernetClass Ethernet;
+    // arduino::EthernetClass Ethernet;
     HWClock RTClock;
     BreakoutCarrierClass() : I2C_0(PH_8,PH_7),
                              I2C_1(PB_7,PB_6),
@@ -263,7 +263,7 @@ public:
                              UART3(PJ_8, PJ_9, NC, NC),
                              SPI_0(PC_2, PC_3, PI_1),
                              PDM(PB_2, PE_2, NC),
-                             Ethernet(),
+                             //Ethernet(),
                              RTClock()
     {
     }

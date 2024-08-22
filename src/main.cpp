@@ -104,15 +104,15 @@ bool airON = 0;
 
 // ball sensor logging variables
 int ballVel[3];
-uint32_t ballVelTimestamp;
-uint32_t ballVelPckgID = 0;
-uint32_t globalID = 0;
+uint64_t ballVelTimestamp;
+uint64_t ballVelPckgID = 0;
+uint64_t globalID = 0;
 String ballVelPckgBase;
 String ballVelPckgValue;
 
 // air valve logging
-uint32_t airvalveTimestamp = 0;
-uint32_t airvalvePckgID = 0;
+uint64_t airvalveTimestamp = 0;
+uint64_t airvalvePckgID = 0;
 
 // m4 action processing 
 bool local_new_M4_action;
@@ -125,11 +125,11 @@ String m4actionPckgValue;
 int m4actionPckgID=0;
 int m4actionTimestamp;
 
-uint32_t pckgID = 0;
-uint32_t successPckgID = 0;
-uint32_t failurePckgID = 0;
-uint32_t rewardPckgID = 0;
-uint32_t punishmentPckgID = 0;
+uint64_t pckgID = 0;
+uint64_t successPckgID = 0;
+uint64_t failurePckgID = 0;
+uint64_t rewardPckgID = 0;
+uint64_t punishmentPckgID = 0;
 
 
 uint16_t m7_reward_length;
@@ -611,7 +611,7 @@ void setup() {
 
   // TTL pin setup for ball and lick
   Breakout.pinMode(PWM9, OUTPUT); // ball sensor ttl
-  // Breakout.pinMode(PWM8, OUTPUT); // lick sensor ttl
+  Breakout.pinMode(PWM8, OUTPUT); // lick sensor ttl
 
   // main airvalve -- working
   Breakout.pinMode(PWM3, OUTPUT);
@@ -678,14 +678,17 @@ void loop() {
   (4) check animals licking, send package when lick over 
   ================================================================================
   */
+
   if (Breakout.analogRead(ANALOG_A6)>LICK_THRESHOLD){
     if (!is_licking){
       // animal just started licking
+      Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
       start_lick_timestamp = micros();
       is_licking = true;
       digitalWrite(LEDR, LOW);
     }
   } else if (is_licking){
+    Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
     is_licking = false;
     digitalWrite(LEDR, LOW);
     end_lick_timestamp = micros();
@@ -834,7 +837,7 @@ void setup() {
   }
 
   Breakout.pinMode(PWM4, OUTPUT); //air puff
-  Breakout.pinMode(PWM8, OUTPUT); //air TTL
+  // Breakout.pinMode(PWM8, OUTPUT); //air TTL
   
   // Breakout.pinMode(PWM2, OUTPUT);
   // Breakout.pinMode(PWM0, OUTPUT);
