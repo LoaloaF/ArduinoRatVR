@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 125
+#define LICK_THRESHOLD 25
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -428,6 +428,9 @@ void processSerialInput(){
         break;
         
       case 'F': // trigger failure outcome, only failure-sound
+        break;
+      
+      case 'M': // mute toggle
         break;
       
       case 'P': // trigger punishment, open airpuff airvalve
