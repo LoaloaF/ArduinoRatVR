@@ -778,6 +778,7 @@ bool PWM_state = false;
 
 bool progress = false;
 bool new_action=false;
+bool silent=false;
 
 volatile struct shared_data * const buff = (struct shared_data *)0x38001000;
 
@@ -898,25 +899,31 @@ void loop(){
     digitalWrite(LEDR, HIGH);
   }
   HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS); // release HW semaphore
+
+  if (local_startNewAction == 'M') {  //mute
+    silent = !silent;
   
-  if (local_startNewAction == 'S') {
+  } else if (local_startNewAction == 'S') {
 
-    // message M7 that action (sucess-sound) is being executed
-    while(HAL_HSEM_Take(HSEM_ID, HSEM_PROCESS) != HAL_OK){};
-    buff->startedM4Action = 'S';
-    HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
+    if (!silent) {
+        // play sound
+      // message M7 that action (sucess-sound) is being executed
+      while(HAL_HSEM_Take(HSEM_ID, HSEM_PROCESS) != HAL_OK){};
+      buff->startedM4Action = 'S';
+      HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
 
-    // LEDS are lighting up
-    digitalWrite(LEDG, LOW);
-    digitalWrite(LED_BUILTIN, LOW);
-    
-    digitalWrite(GPIO_1, HIGH);  // TTL HIGH reward sound start
-    for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
-      Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
-      PWM_state = !PWM_state;
-      delayMicroseconds(HALF_PERIOD_REWARD);
+      // LEDS are lighting up
+      digitalWrite(LEDG, LOW);
+      digitalWrite(LED_BUILTIN, LOW);
+      
+      digitalWrite(GPIO_1, HIGH);  // TTL HIGH reward sound start
+      for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
+        Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
+        PWM_state = !PWM_state;
+        delayMicroseconds(HALF_PERIOD_REWARD);
+      }
+      digitalWrite(GPIO_1, LOW); // TTL LOW reward sound stop
     }
-    digitalWrite(GPIO_1, LOW); // TTL LOW reward sound stop
     
     // delay(PAUSE_LENGTH);
     
@@ -926,7 +933,7 @@ void loop(){
     //   delayMicroseconds(HALF_PERIOD_REWARD);
     // }
 
-    // sleep for sound_delay
+    // sleep at least for sound_delay
     delay(local_actionDelay);
 
     // message M7 that action (reward-opening) is being executed
