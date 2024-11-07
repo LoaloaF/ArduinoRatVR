@@ -138,7 +138,7 @@ uint16_t m7_sound_delay; // delay between sound end to reward start
 
 
 // lick sensor processing and logging
-#define LICK_THRESHOLD 25
+#define LICK_THRESHOLD 30
 bool is_licking=false;
 uint32_t start_lick_timestamp;
 uint32_t end_lick_timestamp;
@@ -604,11 +604,11 @@ void setup() {
   // PWM3 -> VALVE4 -> DSub 5 -> 3.3V -> air puff trigger                         // ASSIGNED, IMPLEMENTED, TESTED
   
   // GPIO_4 (M4) USER_2 -> valve/reward trigger                                   // ASSIGNED, IMPLEMENTED, TESTED
-  // PWM2 (M4) VALVE3 reward TTL                                                  // ASSIGNED, IMPLEMENTED, TESTED
+  // PWM2 (M4) VALVE3 reward TTL       no PWM triggers punishment!                                          // ASSIGNED, IMPLEMENTED, TESTED
   // PWM7 (M4) -> Sound generator                                                 // ASSIGNED, IMPLEMENTED, TESTED
   // GPIO_1 (M4) -> Sound TTL                                                     // ASSIGNED, IMPLEMENTED, TESTED
 
-  // PWM8 (M7) -> USER 3 -> DSub 2 -> Airpuff Sensor TTL                          // ASSIGNED, IMPLEMENTED, TESTED
+  // PWM8 (M7) -> USER 3 -> DSub 2 -> Airpuff Sensor TTL, now lick                   // ASSIGNED, IMPLEMENTED, TESTED
 
 
 
@@ -825,7 +825,7 @@ void setup() {
 
   Breakout.pinMode(PWM7, OUTPUT);
   Breakout.pinMode(GPIO_1, OUTPUT); //sound TTL
-  Breakout.pinMode(PWM2, OUTPUT);  //reward TTL
+  Breakout.pinMode(PWM1, OUTPUT);  //reward TTL not anymore, now airpuf solonoid, 
   
   //Breakout.analogWrite(PWM7, 255);
   // Breakout.digitalWrite(GPIO_5, LOW);
@@ -840,10 +840,11 @@ void setup() {
     }
   }
 
-  Breakout.pinMode(PWM4, OUTPUT); //air puff
+  // Breakout.pinMode(PWM4, OUTPUT); //air puff unreliable chip
+  // Breakout.pinMode(PWM2, OUTPUT); //air puff unreliable chip
   // Breakout.pinMode(PWM8, OUTPUT); //air TTL
   
-  // Breakout.pinMode(PWM2, OUTPUT);
+  Breakout.pinMode(PWM2, OUTPUT);
   // Breakout.pinMode(PWM0, OUTPUT);
 }
 
@@ -950,11 +951,11 @@ void loop(){
     digitalWrite(LED_BUILTIN, LOW);
 
     // turn on reward valve
-    Breakout.digitalWrite(PWM2, HIGH); // TTL HIGH vaalve opened
+    // Breakout.digitalWrite(PWM2, HIGH); // TTL HIGH vaalve opened
     digitalWrite(REWARD_PIN, HIGH);
     delay(local_actionLength);
     digitalWrite(REWARD_PIN, LOW);
-    Breakout.digitalWrite(PWM2, LOW); // TTL LOW vaalve opened
+    // Breakout.digitalWrite(PWM2, LOW); // TTL LOW vaalve opened
     
     digitalWrite(LEDG, HIGH);
     digitalWrite(LED_BUILTIN, HIGH);
@@ -986,11 +987,11 @@ void loop(){
     HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
 
     // airpuff
-    Breakout.digitalWrite(PWM4, HIGH);  // Airpuff valve open
-    Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
+    Breakout.digitalWrite(PWM1, HIGH);  // Airpuff valve open
+    // Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
     delay(local_actionLength);
-    Breakout.digitalWrite(PWM4, LOW); // Airpuff valve closed
-    Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
+    Breakout.digitalWrite(PWM1, LOW); // Airpuff valve closed
+    // Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
   }
 }
 
