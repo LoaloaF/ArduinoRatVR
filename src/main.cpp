@@ -433,6 +433,11 @@ void processSerialInput(){
       case 'M': // mute toggle
         break;
       
+      case 'V': // trigger vacuum, suck reward
+        local_actionLength = cmd.substring(1).toInt();
+        Serial.println("VACUUM");
+        break;
+
       case 'P': // trigger punishment, open airpuff airvalve
         local_actionLength = cmd.substring(1).toInt();
         break;
@@ -486,6 +491,11 @@ void processM4actions(){
         pckgID = rewardPckgID;
         m4actionPckgValueStr = String(local_actionLength); // how long the valve was open
         rewardPckgID++;
+        break;
+      case 'V': // vacuum, reward sucked
+        pckgID = punishmentPckgID;
+        m4actionPckgValueStr = String(local_actionLength); // how long vacuum was open
+        punishmentPckgID++;
         break;
       case 'P': // punishment delivered
         pckgID = punishmentPckgID;
@@ -598,23 +608,26 @@ void setup() {
   // TTL MEAK1 sync
   
   // MAPPING:
+  
+  // PWM8 (M7) -> USER 3 -> DSub 2 -> Lick Sensor TTL                   // ASSIGNED, IMPLEMENTED, TESTED
+  // GPIO_4 (M4) VALVE-1-TRIG -> valve/reward trigger                                   // ASSIGNED, IMPLEMENTED, TESTED
+  // PWM7 (M4) -> USER_4 -> Sound generator                                                 // ASSIGNED, IMPLEMENTED, TESTED
   // PWM9 (M7) -> USER 1 -> DSub 1 -> Ball Sensor TTL                             // ASSIGNED, IMPLEMENTED, TESTED
 
-  // PWM4 -> VALVE5 -> DSub 4 ->  main air valve                                  // ASSIGNED, IMPLEMENTED, TESTED
-  // PWM3 -> VALVE4 -> DSub 5 -> 3.3V -> air puff trigger                         // ASSIGNED, IMPLEMENTED, TESTED
+  // PWM3 -> VALVE4 -> DSub 5 -> 3.3V -> main air valve                         // ASSIGNED, IMPLEMENTED, TESTED
   
-  // GPIO_4 (M4) USER_2 -> valve/reward trigger                                   // ASSIGNED, IMPLEMENTED, TESTED
-  // PWM2 (M4) VALVE3 reward TTL       no PWM triggers punishment!                                          // ASSIGNED, IMPLEMENTED, TESTED
-  // PWM7 (M4) -> Sound generator                                                 // ASSIGNED, IMPLEMENTED, TESTED
-  // GPIO_1 (M4) -> Sound TTL                                                     // ASSIGNED, IMPLEMENTED, TESTED
+  // PWM4 -> Bad chip don't use this solonoid                                  // ASSIGNED, IMPLEMENTED, TESTED
+  
+  // PWM2 , VALVE_2_TRIG (M4) -> triggers punishment                                          // ASSIGNED, IMPLEMENTED, TESTED
+  // GPIO_1 (M4) -> Sound TTL
+  // PWM1 -> opens vaccum valve                                                     // ASSIGNED, IMPLEMENTED, TESTED
 
-  // PWM8 (M7) -> USER 3 -> DSub 2 -> Airpuff Sensor TTL, now lick                   // ASSIGNED, IMPLEMENTED, TESTED
 
 
 
   // TTL pin setup for ball and lick
-  Breakout.pinMode(PWM9, OUTPUT); // ball sensor ttl
   Breakout.pinMode(PWM8, OUTPUT); // lick sensor ttl
+  Breakout.pinMode(PWM9, OUTPUT); // ball sensor ttl
 
   // main airvalve -- working
   Breakout.pinMode(PWM3, OUTPUT);
@@ -685,13 +698,13 @@ void loop() {
   if (Breakout.analogRead(ANALOG_A6)>LICK_THRESHOLD){
     if (!is_licking){
       // animal just started licking
-      Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
+      Breakout.digitalWrite(PWM8, HIGH);  // TTL lick start (might lack behind 600 us)
       start_lick_timestamp = micros();
       is_licking = true;
       digitalWrite(LEDR, LOW);
     }
   } else if (is_licking){
-    Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
+    Breakout.digitalWrite(PWM8, LOW); // TTL lick stop (might lack behind 600 us)
     is_licking = false;
     digitalWrite(LEDR, LOW);
     end_lick_timestamp = micros();
@@ -760,10 +773,10 @@ void loop() {
 #define HSEM_ID 0
 #define HSEM_PROCESS 0
 
-char local_startNewAction;  // can be A S F P
-uint16_t local_actionLength;  // relevant for S and P
+char local_startNewAction;  // can be A S F P V
+uint16_t local_actionLength;  // relevant for S and P and V
 uint16_t local_actionDelay;  // relevant for S
-char local_startedM4Action; // can be A S F P
+char local_startedM4Action; // can be A S F P V
 
 bool PWM_state = false;
 // #define HALF_PERIOD_REWARD 360
@@ -824,8 +837,8 @@ void setup() {
   Breakout.digitalWrite(REWARD_PIN, LOW);
 
   Breakout.pinMode(PWM7, OUTPUT);
-  Breakout.pinMode(GPIO_1, OUTPUT); //sound TTL
-  Breakout.pinMode(PWM1, OUTPUT);  //reward TTL not anymore, now airpuf solonoid, 
+  Breakout.pinMode(GPIO_5, OUTPUT); // sound TTL
+  Breakout.pinMode(PWM1, OUTPUT);  // Vacuum trigger (VALVE_2_TRIG 
   
   //Breakout.analogWrite(PWM7, 255);
   // Breakout.digitalWrite(GPIO_5, LOW);
@@ -841,10 +854,8 @@ void setup() {
   }
 
   // Breakout.pinMode(PWM4, OUTPUT); //air puff unreliable chip
-  // Breakout.pinMode(PWM2, OUTPUT); //air puff unreliable chip
-  // Breakout.pinMode(PWM8, OUTPUT); //air TTL
   
-  Breakout.pinMode(PWM2, OUTPUT);
+  Breakout.pinMode(PWM2, OUTPUT); //AIRPUFF
   // Breakout.pinMode(PWM0, OUTPUT);
 }
 
@@ -920,13 +931,13 @@ void loop(){
       digitalWrite(LEDG, LOW);
       digitalWrite(LED_BUILTIN, LOW);
       
-      digitalWrite(GPIO_1, HIGH);  // TTL HIGH reward sound start
+      digitalWrite(GPIO_5, HIGH);  // TTL HIGH reward sound start
       for (uint16_t i=0; i < (SOUND_LENGTH*1000) / HALF_PERIOD_REWARD; i++){
         Breakout.digitalWrite(PWM7, (PWM_state) ? HIGH : LOW);
         PWM_state = !PWM_state;
         delayMicroseconds(HALF_PERIOD_REWARD);
       }
-      digitalWrite(GPIO_1, LOW); // TTL LOW reward sound stop
+      digitalWrite(GPIO_5, LOW); // TTL LOW reward sound stop
     }
     
     // delay(PAUSE_LENGTH);
@@ -951,11 +962,9 @@ void loop(){
     digitalWrite(LED_BUILTIN, LOW);
 
     // turn on reward valve
-    // Breakout.digitalWrite(PWM2, HIGH); // TTL HIGH vaalve opened
     digitalWrite(REWARD_PIN, HIGH);
     delay(local_actionLength);
     digitalWrite(REWARD_PIN, LOW);
-    // Breakout.digitalWrite(PWM2, LOW); // TTL LOW vaalve opened
     
     digitalWrite(LEDG, HIGH);
     digitalWrite(LED_BUILTIN, HIGH);
@@ -986,13 +995,24 @@ void loop(){
     buff->startedM4Action = 'P';
     HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
 
-    // airpuff
-    Breakout.digitalWrite(PWM1, HIGH);  // Airpuff valve open
-    // Breakout.digitalWrite(PWM8, HIGH);  // Airpuff start TTL HIGH
+    // Airpuff  
+    Breakout.digitalWrite(PWM2, HIGH); // Airpuff HIGH vaalve opened
     delay(local_actionLength);
-    Breakout.digitalWrite(PWM1, LOW); // Airpuff valve closed
-    // Breakout.digitalWrite(PWM8, LOW); // Airpuff stop TTL LOW
-  }
+    Breakout.digitalWrite(PWM2, LOW); //  Airpuff LOW vaalve opened
+
+  } else if (local_startNewAction == 'V') {
+
+    // message M7 that action (reward-opening) is being executed
+    while(HAL_HSEM_Take(HSEM_ID, HSEM_PROCESS) != HAL_OK){};
+    buff->startedM4Action = 'V';
+    HAL_HSEM_Release(HSEM_ID, HSEM_PROCESS);
+
+    // Vacuum
+    Breakout.digitalWrite(PWM1, HIGH);  // Vacuum valve open
+    delay(local_actionLength);
+    Breakout.digitalWrite(PWM1, LOW); // Vacuum valve closed
+
+  } 
 }
 
 // /*
