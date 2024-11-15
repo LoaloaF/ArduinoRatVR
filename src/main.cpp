@@ -435,7 +435,7 @@ void processSerialInput(){
       
       case 'V': // trigger vacuum, suck reward
         local_actionLength = cmd.substring(1).toInt();
-        Serial.println("VACUUM");
+        // Serial.println("VACUUM");
         break;
 
       case 'P': // trigger punishment, open airpuff airvalve
